@@ -14,6 +14,10 @@ use sp_consensus_aura::sr25519::{AuthorityPair as AuraPair};
 use sc_finality_grandpa::{
 	FinalityProofProvider as GrandpaFinalityProofProvider, StorageAndProofProvider, SharedVoterState,
 };
+use sp_api::ProvideRuntimeApi;
+use sp_consensus_pow::DifficultyApi;
+use sp_core::{U256, H256};
+
 // pub mod pow;
 // Our native executor instance.
 native_executor_instance!(
@@ -159,7 +163,7 @@ pub fn new_full(config: Configuration) -> Result<impl AbstractService, ServiceEr
 		// )?;
 		sc_consensus_pow::start_mine(
 			Box::new(block_import),
-			client,
+			client.clone(),
 			crate::pow::Sha3Algorithm::new(client.clone()),
 			proposer,
 			None,
@@ -291,7 +295,7 @@ pub fn new_light(config: Configuration) -> Result<impl AbstractService, ServiceE
 
 			let pow_block_import = sc_consensus_pow::PowBlockImport::new(
 				client.clone(),
-				client,
+				client.clone(),
 				crate::pow::Sha3Algorithm::new(client.clone()),
 				0, // check_inherents_after,
 				_select_chain,

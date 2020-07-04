@@ -25,7 +25,10 @@ std = [
     'system/std',
     'timestamp/std',
     'transaction-payment/std',
-    'template/std',
+    'difficulty/std',
+    'charity/std',
+    'pallet-session/std',
+    'pallet-im-online/std',
 ]
 [dependencies.aura]
 default-features = false
@@ -164,11 +167,6 @@ package = 'frame-system'
 tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
-[dependencies.template]
-default-features = false
-package = 'pallet-template'
-path = '../pallets/template'
-version = '2.0.0-rc4'
 
 [dependencies.timestamp]
 default-features = false
@@ -181,6 +179,36 @@ version = '2.0.0-rc4'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 package = 'pallet-transaction-payment'
+tag = 'v2.0.0-rc4'
+version = '2.0.0-rc4'
+
+[dependencies.sp-consensus-pow]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc4'
+version = '0.8.0-rc4'
+
+[dependencies.difficulty]
+default-features = false
+package = 'difficulty'
+path = '../pallets/difficulty'
+version = '2.0.0-rc4'
+
+[dependencies.charity]
+default-features = false
+package = 'charity'
+path = '../pallets/charity'
+version = '2.0.0-rc4'
+
+[dependencies.pallet-im-online]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc4'
+version = '2.0.0-rc4'
+
+[dependencies.pallet-session]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 

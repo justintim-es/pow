@@ -1,6 +1,6 @@
 use sp_core::{Pair, Public, sr25519};
 use node_template_runtime::{
-	AccountId, BalancesConfig, GenesisConfig,
+	AccountId, BalancesConfig, GenesisConfig, DifficultyConfig,
 	SudoConfig, SystemConfig, WASM_BINARY, Signature
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -120,5 +120,8 @@ fn testnet_genesis(initial_authorities: Vec<(AuraId, GrandpaId)>,
 		sudo: Some(SudoConfig {
 			key: root_key,
 		}),
+		difficulty: Some(DifficultyConfig {
+			dischif: 10000000
+		})
 	}
 }

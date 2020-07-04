@@ -15,7 +15,7 @@ use sp_runtime::{
 	transaction_validity::{TransactionValidity, TransactionSource},
 };
 use sp_runtime::traits::{
-	BlakeTwo256, Block as BlockT, IdentityLookup, Verify, IdentifyAccount, NumberFor, Saturating,
+	BlakeTwo256, Block as BlockT, IdentityLookup, Verify, IdentifyAccount, NumberFor, Saturating, ConvertInto
 };
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -24,6 +24,8 @@ use grandpa::fg_primitives;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+use sp_core::{U256, H256};
+
 
 // A few exports that help ease life for downstream crates.
 #[cfg(any(feature = "std", test))]
@@ -41,7 +43,6 @@ pub use frame_support::{
 };
 
 /// Importing a template pallet
-pub use template;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -90,7 +91,7 @@ pub mod opaque {
 		}
 	}
 }
-
+// pub mod difficulty;
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("node-template"),
@@ -189,37 +190,16 @@ impl system::Trait for Runtime {
 	type AccountData = balances::AccountData<Balance>;
 }
 
-// impl aura::Trait for Runtime {
-// 	type AuthorityId = AuraId;
-// }
-
-// impl grandpa::Trait for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-
-// 	type KeyOwnerProofSystem = ();
-
-// 	type KeyOwnerProof =
-// 		<Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, GrandpaId)>>::Proof;
-
-// 	type KeyOwnerIdentification = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
-// 		KeyTypeId,
-// 		GrandpaId,
-// 	)>>::IdentificationTuple;
-
-// 	type HandleEquivocation = ();
-// }
-
 parameter_types! {
 	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
-// impl timestamp::Trait for Runtime {
-// 	/// A timestamp: milliseconds since the unix epoch.
-// 	type Moment = u64;
-// 	type OnTimestampSet = TemplateModule;
-// 	type MinimumPeriod = MinimumPeriod;
-// }
+impl timestamp::Trait for Runtime {
+	/// A timestamp: milliseconds since the unix epoch.
+	type Moment = u64;
+	type OnTimestampSet = Difficulty;
+	type MinimumPeriod = MinimumPeriod;
+}
 
 parameter_types! {
 	pub const ExistentialDeposit: u128 = 1;
@@ -251,12 +231,33 @@ impl sudo::Trait for Runtime {
 	type Event = Event;
 	type Call = Call;
 }
-
-/// Used for the module template in `./template.rs`
-impl template::Trait for Runtime {
+impl difficulty::Trait for Runtime {
 	type Event = Event;
 }
-
+impl charity::Trait for Runtime {
+	type Event = Event;
+	type Currency = balances::Module<Runtime>; 
+	type Randomness = RandomnessCollectiveFlip;
+}
+impl pallet_session::historical for Runtime {
+	type FullIdentification = AccountId;
+	type FullIdentificationOf = ConvertInto;
+	
+}
+// parameter_types! {
+// 	pub const DisabledValidatorsThreshold: Perbill = Perbill::from_percent(17);
+// }
+// impl pallet_session::Trait for Runtime {
+// 	type Event = Event;
+// 	type ValidatorId = <Self as frame_system::Trait>::AccountId;
+// 	type ValidatorIdOf = ConvertInto;
+// 	type ShouldEndSession = Charity;
+// 	type NextSessionRotation = Charity;
+// 	type SessionManager = Charity;
+// 	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+// 	type Keys = SessionKeys;
+// 	type DisabledValidatorsThreshold = DisabledValidatorsThreshold;
+// }
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -265,14 +266,13 @@ construct_runtime!(
 	{
 		System: system::{Module, Call, Config, Storage, Event<T>},
 		RandomnessCollectiveFlip: randomness_collective_flip::{Module, Call, Storage},
-		// Timestamp: timestamp::{Module, Call, Storage, Inherent},
-		// Aura: aura::{Module, Config<T>, Inherent(Timestamp)},
-		// Grandpa: grandpa::{Module, Call, Storage, Config, Event},
+		Timestamp: timestamp::{Module, Call, Storage, Inherent},
 		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: transaction_payment::{Module, Storage},
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
-		// Used for the module template in `./template.rs`
-		TemplateModule: template::{Module, Call, Storage, Event<T>},
+		Difficulty: difficulty::{Module, Call, Storage, Event<T>, Config},
+		Charity: charity::{Module, Call, Storage, Event<T>},
+		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config},
 	}
 );
 
@@ -383,6 +383,11 @@ impl_runtime_apis! {
 			encoded: Vec<u8>,
 		) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
 			opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
+		}
+	}
+	impl sp_consensus_pow::DifficultyApi<Block, U256> for Runtime {
+		fn difficulty() -> U256 {
+			U256::from(difficulty::Module::<Runtime>::difficulty())
 		}
 	}
 

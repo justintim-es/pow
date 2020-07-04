@@ -86,17 +86,17 @@ impl<B: BlockT<Hash=H256>, C> PowAlgorithm<B> for Sha3Algorithm<C> where C: Prov
      ) -> Result<Option<RawSeal>, Error<B>> {
          let mut rng = SmallRng::from_rng(&mut thread_rng()).map_err(|e| Error::Environment(format!("initialize rng failed for mining: {:?}", e)))?;
          for _ in 0..round {
-             let nonce = H256::random_using(&mut rng);
-             let compute = Compute {
-                 difficulty,
-                 pre_hash: *pre_hash,
-                 nonce
-             };
-             let seal = compute.compute();
-             if hash_meets_difficulty(&seal.work, difficulty) {
+            let nonce = H256::random_using(&mut rng);
+            let compute = Compute {
+                difficulty,
+                pre_hash: *pre_hash,
+                nonce
+            };
+            let seal = compute.compute();
+            if hash_meets_difficulty(&seal.work, difficulty) {
                  return Ok(Some(seal.encode()))
-             }
-         }
-         Ok(None )
+            }
+        }
+        Ok(None)
     }
 }
