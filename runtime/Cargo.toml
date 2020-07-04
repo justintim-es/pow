@@ -27,8 +27,6 @@ std = [
     'transaction-payment/std',
     'difficulty/std',
     'charity/std',
-    'pallet-session/std',
-    'pallet-im-online/std',
 ]
 [dependencies.aura]
 default-features = false
@@ -200,17 +198,6 @@ package = 'charity'
 path = '../pallets/charity'
 version = '2.0.0-rc4'
 
-[dependencies.pallet-im-online]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc4'
-version = '2.0.0-rc4'
-
-[dependencies.pallet-session]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc4'
-version = '2.0.0-rc4'
 
 [package]
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']

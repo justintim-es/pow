@@ -239,25 +239,6 @@ impl charity::Trait for Runtime {
 	type Currency = balances::Module<Runtime>; 
 	type Randomness = RandomnessCollectiveFlip;
 }
-impl pallet_session::historical for Runtime {
-	type FullIdentification = AccountId;
-	type FullIdentificationOf = ConvertInto;
-	
-}
-// parameter_types! {
-// 	pub const DisabledValidatorsThreshold: Perbill = Perbill::from_percent(17);
-// }
-// impl pallet_session::Trait for Runtime {
-// 	type Event = Event;
-// 	type ValidatorId = <Self as frame_system::Trait>::AccountId;
-// 	type ValidatorIdOf = ConvertInto;
-// 	type ShouldEndSession = Charity;
-// 	type NextSessionRotation = Charity;
-// 	type SessionManager = Charity;
-// 	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
-// 	type Keys = SessionKeys;
-// 	type DisabledValidatorsThreshold = DisabledValidatorsThreshold;
-// }
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -272,7 +253,6 @@ construct_runtime!(
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		Difficulty: difficulty::{Module, Call, Storage, Event<T>, Config},
 		Charity: charity::{Module, Call, Storage, Event<T>},
-		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config},
 	}
 );
 
