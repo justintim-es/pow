@@ -41,7 +41,11 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
 };
-
+pub use contracts::Schedule as ContractsSchedule;
+pub const MILLICENTS: Balance = 1_000_000_000;
+pub const CENTS: Balance = 1_000 * MILLICENTS;
+pub const DOLLARS: Balance = 100 * CENTS;
+use contracts_rpc_runtime_api::ContractExecResult;
 /// Importing a template pallet
 
 /// An index to a block.
@@ -200,7 +204,31 @@ impl timestamp::Trait for Runtime {
 	type OnTimestampSet = Difficulty;
 	type MinimumPeriod = MinimumPeriod;
 }
+parameter_types! {
+    pub const TombstoneDeposit: Balance = 16 * MILLICENTS;
+    pub const RentByteFee: Balance = 4 * MILLICENTS;
+    pub const RentDepositOffset: Balance = 1000 * MILLICENTS;
+    pub const SurchargeReward: Balance = 150 * MILLICENTS;
+}
 
+impl contracts::Trait for Runtime {
+    type Time = Timestamp;
+    type Randomness = RandomnessCollectiveFlip;
+    type Currency = Balances;
+    type Event = Event;
+    type DetermineContractAddress = contracts::SimpleAddressDeterminer<Runtime>;
+    type TrieIdGenerator = contracts::TrieIdFromParentCounter<Runtime>;
+    type RentPayment = ();
+    type SignedClaimHandicap = contracts::DefaultSignedClaimHandicap;
+    type TombstoneDeposit = TombstoneDeposit;
+    type StorageSizeOffset = contracts::DefaultStorageSizeOffset;
+    type RentByteFee = RentByteFee;
+    type RentDepositOffset = RentDepositOffset;
+    type SurchargeReward = SurchargeReward;
+    type MaxDepth = contracts::DefaultMaxDepth;
+    type MaxValueSize = contracts::DefaultMaxValueSize;
+    type WeightPrice = transaction_payment::Module<Self>;
+}
 parameter_types! {
 	pub const ExistentialDeposit: u128 = 1;
 }
@@ -226,7 +254,6 @@ impl transaction_payment::Trait for Runtime {
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
 }
-
 impl sudo::Trait for Runtime {
 	type Event = Event;
 	type Call = Call;
@@ -253,6 +280,7 @@ construct_runtime!(
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		Difficulty: difficulty::{Module, Call, Storage, Event<T>, Config},
 		Charity: charity::{Module, Call, Storage, Event<T>},
+		Contracts: contracts::{Module, Call, Config, Storage, Event<T>},
 	}
 );
 
@@ -343,6 +371,11 @@ impl_runtime_apis! {
 			Executive::offchain_worker(header)
 		}
 	}
+	impl node_template_runtime_api::VoteApi<Block, AccountId> for Runtime {
+		fn voschotesche(account: AccountId, random: Vec<u8>) -> u64 {
+			Charity::voschotesche(account, random)
+		}
+	}
 
 	// impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
 	// 	fn slot_duration() -> u64 {
@@ -370,6 +403,40 @@ impl_runtime_apis! {
 			U256::from(difficulty::Module::<Runtime>::difficulty())
 		}
 	}
+	impl contracts_rpc_runtime_api::ContractsApi<Block, AccountId, Balance, BlockNumber>
+        for Runtime
+    {
+        fn call(
+            origin: AccountId,
+            dest: AccountId,
+            value: Balance,
+            gas_limit: u64,
+            input_data: Vec<u8>,
+        ) -> ContractExecResult {
+            let exec_result =
+                Contracts::bare_call(origin, dest.into(), value, gas_limit, input_data);
+            match exec_result {
+                Ok(v) => ContractExecResult::Success {
+                    status: v.status,
+                    data: v.data,
+                },
+                Err(_) => ContractExecResult::Error,
+            }
+        }
+
+        fn get_storage(
+            address: AccountId,
+            key: [u8; 32],
+        ) -> contracts_primitives::GetStorageResult {
+            Contracts::get_storage(address, key)
+        }
+
+        fn rent_projection(
+            address: AccountId,
+        ) -> contracts_primitives::RentProjectionResult<BlockNumber> {
+            Contracts::rent_projection(address)
+        }
+    }	
 
 	// impl fg_primitives::GrandpaApi<Block> for Runtime {
 	// 	fn grandpa_authorities() -> GrandpaAuthorityList {

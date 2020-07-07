@@ -17,7 +17,7 @@ use sc_finality_grandpa::{
 use sp_api::ProvideRuntimeApi;
 use sp_consensus_pow::DifficultyApi;
 use sp_core::{U256, H256};
-
+type RpcExtension = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 // pub mod pow;
 // Our native executor instance.
 native_executor_instance!(
@@ -34,7 +34,7 @@ macro_rules! new_full_start {
 	($config:expr) => {{
 		// use std::sync::Arc;
 		// use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-
+		use jsonrpc_core::IoHandler;
 		let mut import_setup = None;
 		let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
@@ -108,7 +108,15 @@ macro_rules! new_full_start {
 				import_setup = Some(pow_block_import);
 
 				Ok(import_queue)
-			})?;
+			})?.with_rpc_extensions(|builder| -> Result<IoHandler<sc_rpc::Metadata>, _> {
+                let handler = pallet_contracts_rpc::Contracts::new(builder.client().clone());
+                let delegate = pallet_contracts_rpc::ContractsApi::to_delegate(handler);
+
+                let mut io = IoHandler::default();
+				io.extend_with(delegate);
+				io.extend_with(runtime_api_impl::VoteRpc::to_delegate(runtime_api_impl::Vote::new(builder.client().clone())));
+                Ok(io)
+            })?;
 
 		(builder, import_setup, inherent_data_providers)
 	}}
@@ -149,18 +157,7 @@ pub fn new_full(config: Configuration) -> Result<impl AbstractService, ServiceEr
 		let can_author_with =
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-		// let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _>(
-		// 	sc_consensus_aura::slot_duration(&*client)?,
-		// 	client,
-		// 	select_chain,
-		// 	block_import,
-		// 	proposer,
-		// 	service.network(),
-		// 	inherent_data_providers.clone(),
-		// 	force_authoring,
-		// 	service.keystore(),
-		// 	can_author_with,
-		// )?;
+
 		sc_consensus_pow::start_mine(
 			Box::new(block_import),
 			client.clone(),
