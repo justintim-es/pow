@@ -6,6 +6,6 @@ members = [
     'node',
     'pallets/difficulty',
     'pallets/charity',
-    'runtime-api',
+    'pallets/hashes',
     'runtime',
 ]

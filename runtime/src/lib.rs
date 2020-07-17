@@ -266,6 +266,11 @@ impl charity::Trait for Runtime {
 	type Currency = balances::Module<Runtime>; 
 	type Randomness = RandomnessCollectiveFlip;
 }
+impl hashes::Trait for Runtime {
+	type Event = Event;
+	type Currency = balances::Module<Runtime>; 
+	type Randomness = RandomnessCollectiveFlip;
+}
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -280,6 +285,7 @@ construct_runtime!(
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		Difficulty: difficulty::{Module, Call, Storage, Event<T>, Config},
 		Charity: charity::{Module, Call, Storage, Event<T>},
+		Hashes: hashes::{Module, Call, Storage, Event<T>},
 		Contracts: contracts::{Module, Call, Config, Storage, Event<T>},
 	}
 );
@@ -371,9 +377,9 @@ impl_runtime_apis! {
 			Executive::offchain_worker(header)
 		}
 	}
-	impl node_template_runtime_api::VoteApi<Block, AccountId> for Runtime {
-		fn voschotesche(account: AccountId, random: Vec<u8>) -> u64 {
-			Charity::voschotesche(account, random)
+	impl ::HashesApi<Block, Hash> for Runtime {
+		fn guess(seed: Vec<u8>) -> Option<Hash> {
+			hashes::random(seed)
 		}
 	}
 

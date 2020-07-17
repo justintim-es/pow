@@ -94,6 +94,7 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
+
 [dependencies.sp-consensus-aura]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
@@ -195,17 +196,18 @@ package = 'difficulty'
 path = '../pallets/difficulty'
 version = '2.0.0-rc4'
 
+[dependencies.hashes]
+default-features = false
+package = 'hashes'
+path = '../pallets/hashes'
+version = '2.0.0-rc4'
+
 [dependencies.charity]
 default-features = false
 package = 'charity'
 path = '../pallets/charity'
 version = '2.0.0-rc4'
 
-[dependencies.node-template-runtime-api]
-default-features = false
-package = 'node-template-runtime-api'
-path = '../runtime-api'
-version = '2.0.0-rc4'
 
 [dependencies.contracts]
 git = 'https://github.com/paritytech/substrate.git'
@@ -227,6 +229,10 @@ default-features = false
 package = 'pallet-contracts-rpc-runtime-api'
 version = '0.8.0-rc4'
 tag = 'v2.0.0-rc4'
+
+[dependencies.guess-rpc]
+package= 'guess-rpc'
+path = '../rpcs'
 
 [package]
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']

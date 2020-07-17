@@ -110,12 +110,13 @@ macro_rules! new_full_start {
 				Ok(import_queue)
 			})?.with_rpc_extensions(|builder| -> Result<IoHandler<sc_rpc::Metadata>, _> {
                 let handler = pallet_contracts_rpc::Contracts::new(builder.client().clone());
-                let delegate = pallet_contracts_rpc::ContractsApi::to_delegate(handler);
+				let delegate = pallet_contracts_rpc::ContractsApi::to_delegate(handler);
+				
 
                 let mut io = IoHandler::default();
 				io.extend_with(delegate);
-				io.extend_with(runtime_api_impl::VoteRpc::to_delegate(runtime_api_impl::Vote::new(builder.client().clone())));
-                Ok(io)
+				io.extend_with(rpcs::rpcs::GuessRpc::to_delegate(rpcs::rpcs::Gues::new(builder.client.clone())))
+				Ok(io)
             })?;
 
 		(builder, import_setup, inherent_data_providers)
@@ -135,97 +136,41 @@ pub fn new_full(config: Configuration) -> Result<impl AbstractService, ServiceEr
 			.expect("Link Half and Block Import are present for Full Services or setup failed before. qed");
 
 	let service = builder
-		.with_finality_proof_provider(|client, backend| {
-			// GenesisAuthoritySetProvider is implemented for StorageAndProofProvider
-			let provider = client as Arc<dyn StorageAndProofProvider<_, _>>;
-			Ok(Arc::new(()) as _)
-		})?
-		.build_full()?;
+	.with_finality_proof_provider(|client, backend| {
+		// GenesisAuthoritySetProvider is implemented for StorageAndProofProvider
+		let provider = client as Arc<dyn StorageAndProofProvider<_, _>>;
+		Ok(Arc::new(()) as _)
+	})?
+	.build_full()?;
 
-	if role.is_authority() {
-		let proposer = sc_basic_authorship::ProposerFactory::new(
-			service.client(),
-			service.transaction_pool(),
-			service.prometheus_registry().as_ref(),
-		);
-		let rounds = 500;
+	let proposer = sc_basic_authorship::ProposerFactory::new(
+		service.client(),
+		service.transaction_pool(),
+		service.prometheus_registry().as_ref(),
+	);
+	let rounds = 500;
 
-		let client = service.client();
-		let select_chain = service.select_chain()
-			.ok_or(ServiceError::SelectChainRequired)?;
+	let client = service.client();
+	let select_chain = service.select_chain()
+		.ok_or(ServiceError::SelectChainRequired)?;
 
-		let can_author_with =
-			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
+	let can_author_with =
+		sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 
-		sc_consensus_pow::start_mine(
-			Box::new(block_import),
-			client.clone(),
-			crate::pow::Sha3Algorithm::new(client.clone()),
-			proposer,
-			None,
-			rounds,
-			service.network(),
-			std::time::Duration::new(2,0),
-			Some(select_chain),
-			inherent_data_providers,
-			can_author_with
-		);
-		// the AURA authoring task is considered essential, i.e. if it
-		// fails we take down the service with it.
-		// service.spawn_essential_task_handle().spawn_blocking("aura", aura);
-	}
-
-	// if the node isn't actively participating in consensus then it doesn't
-	// need a keystore, regardless of which protocol we use below.
-	// let keystore = if role.is_authority() {
-	// 	Some(service.keystore() as sp_core::traits::BareCryptoStorePtr)
-	// } else {
-	// 	None
-	// };
-
-	// let grandpa_config = sc_finality_grandpa::Config {
-	// 	// FIXME #1578 make this available through chainspec
-	// 	gossip_duration: Duration::from_millis(333),
-	// 	justification_period: 512,
-	// 	name: Some(name),
-	// 	observer_enabled: false,
-	// 	keystore,
-	// 	is_authority: role.is_network_authority(),
-	// };
-
-	// let enable_grandpa = !disable_grandpa;
-	// if enable_grandpa {
-	// 	// start the full GRANDPA voter
-	// 	// NOTE: non-authorities could run the GRANDPA observer protocol, but at
-	// 	// this point the full voter should provide better guarantees of block
-	// 	// and vote data availability than the observer. The observer has not
-	// 	// been tested extensively yet and having most nodes in a network run it
-	// 	// could lead to finality stalls.
-	// 	let grandpa_config = sc_finality_grandpa::GrandpaParams {
-	// 		config: grandpa_config,
-	// 		link: grandpa_link,
-	// 		network: service.network(),
-	// 		inherent_data_providers: inherent_data_providers.clone(),
-	// 		telemetry_on_connect: Some(service.telemetry_on_connect_stream()),
-	// 		voting_rule: sc_finality_grandpa::VotingRulesBuilder::default().build(),
-	// 		prometheus_registry: service.prometheus_registry(),
-	// 		shared_voter_state: SharedVoterState::empty(),
-	// 	};
-
-	// 	// the GRANDPA voter task is considered infallible, i.e.
-	// 	// if it fails we take down the service with it.
-	// 	service.spawn_essential_task_handle().spawn_blocking(
-	// 		"grandpa-voter",
-	// 		sc_finality_grandpa::run_grandpa_voter(grandpa_config)?
-	// 	);
-	// } else {
-	// 	sc_finality_grandpa::setup_disabled_grandpa(
-	// 		service.client(),
-	// 		&inherent_data_providers,
-	// 		service.network(),
-	// 	)?;
-	// }
+	sc_consensus_pow::start_mine(
+		Box::new(block_import),
+		client.clone(),
+		crate::pow::Sha3Algorithm::new(client.clone()),
+		proposer,
+		None,
+		rounds,
+		service.network(),
+		std::time::Duration::new(2,0),
+		Some(select_chain),
+		inherent_data_providers,
+		can_author_with
+	);
 
 	Ok(service)
 }
