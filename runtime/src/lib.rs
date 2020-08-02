@@ -9,7 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use sp_std::prelude::*;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata, U256};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource},
@@ -24,7 +24,7 @@ use grandpa::fg_primitives;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
-use sp_core::{U256, H256};
+
 
 
 // A few exports that help ease life for downstream crates.
@@ -377,21 +377,11 @@ impl_runtime_apis! {
 			Executive::offchain_worker(header)
 		}
 	}
-	impl ::HashesApi<Block, Hash> for Runtime {
-		fn guess(seed: Vec<u8>) -> Option<Hash> {
-			hashes::random(seed)
+	impl hashes_api::HashesApi<Block> for Runtime {
+		fn guess(seed: Vec<u8>) -> bool {
+			hashes::Module::<Runtime>::random(seed)
 		}
 	}
-
-	// impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
-	// 	fn slot_duration() -> u64 {
-	// 		Aura::slot_duration()
-	// 	}
-
-	// 	fn authorities() -> Vec<AuraId> {
-	// 		Aura::authorities()
-	// 	}
-	// }
 
 	impl sp_session::SessionKeys<Block> for Runtime {
 		fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
@@ -443,30 +433,4 @@ impl_runtime_apis! {
             Contracts::rent_projection(address)
         }
     }	
-
-	// impl fg_primitives::GrandpaApi<Block> for Runtime {
-	// 	fn grandpa_authorities() -> GrandpaAuthorityList {
-	// 		Grandpa::grandpa_authorities()
-	// 	}
-
-	// 	fn submit_report_equivocation_extrinsic(
-	// 		_equivocation_proof: fg_primitives::EquivocationProof<
-	// 			<Block as BlockT>::Hash,
-	// 			NumberFor<Block>,
-	// 		>,
-	// 		_key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
-	// 	) -> Option<()> {
-	// 		None
-	// 	}
-
-	// 	fn generate_key_ownership_proof(
-	// 		_set_id: fg_primitives::SetId,
-	// 		_authority_id: GrandpaId,
-	// 	) -> Option<fg_primitives::OpaqueKeyOwnershipProof> {
-	// 		// NOTE: this is the only implementation possible since we've
-	// 		// defined our key owner proof type as a bottom type (i.e. a type
-	// 		// with no values).
-	// 		None
-	// 	}
-	// }
 }

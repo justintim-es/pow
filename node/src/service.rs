@@ -33,6 +33,7 @@ native_executor_instance!(
 macro_rules! new_full_start {
 	($config:expr) => {{
 		// use std::sync::Arc;
+		type RpcExtension = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 		// use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 		use jsonrpc_core::IoHandler;
 		let mut import_setup = None;
@@ -64,29 +65,6 @@ macro_rules! new_full_start {
 				spawn_task_handle,
 				registry,
 			| {
-				// let select_chain = select_chain.take()
-				// 	.ok_or_else(|| sc_service::Error::SelectChainRequired)?;
-
-				// let (grandpa_block_import, grandpa_link) = sc_finality_grandpa::block_import(
-				// 	client.clone(),
-				// 	&(client.clone() as Arc<_>),
-				// 	select_chain,
-				// )?;
-
-				// let aura_block_import = sc_consensus_aura::AuraBlockImport::<_, _, _, AuraPair>::new(
-				// 	grandpa_block_import.clone(), client.clone(),
-				// );
-
-				// let import_queue = sc_consensus_aura::import_queue::<_, _, _, AuraPair, _>(
-				// 	sc_consensus_aura::slot_duration(&*client)?,
-				// 	aura_block_import,
-				// 	Some(Box::new(grandpa_block_import.clone())),
-				// 	None,
-				// 	client,
-				// 	inherent_data_providers.clone(),
-				// 	spawn_task_handle,
-				// 	registry,
-				// )?;
 				let pow_block_import = sc_consensus_pow::PowBlockImport::new(
 					client.clone(),
 					client.clone(),
@@ -108,14 +86,13 @@ macro_rules! new_full_start {
 				import_setup = Some(pow_block_import);
 
 				Ok(import_queue)
-			})?.with_rpc_extensions(|builder| -> Result<IoHandler<sc_rpc::Metadata>, _> {
+			})?.with_rpc_extensions(|builder| -> Result<RpcExtension, _> {
                 let handler = pallet_contracts_rpc::Contracts::new(builder.client().clone());
 				let delegate = pallet_contracts_rpc::ContractsApi::to_delegate(handler);
 				
-
-                let mut io = IoHandler::default();
+				let mut io = jsonrpc_core::IoHandler::default();
 				io.extend_with(delegate);
-				io.extend_with(rpcs::rpcs::GuessRpc::to_delegate(rpcs::rpcs::Gues::new(builder.client.clone())))
+				io.extend_with(rpcs::GuessRpc::to_delegate(rpcs::Guess::new(builder.client().clone())));
 				Ok(io)
             })?;
 

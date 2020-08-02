@@ -72,12 +72,12 @@ pub fn local_testnet_config() -> ChainSpec {
 		ChainType::Local,
 		|| testnet_genesis(
 			vec![
-				authority_keys_from_seed("Alice"),
+				// authority_keys_from_seed("Alice"),
 				// authority_keys_from_seed("Bob"),
 			],
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			vec![
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// get_account_id_from_seed::<sr25519::Public>("Bob"),
 				// get_account_id_from_seed::<sr25519::Public>("Charlie"),
 				// get_account_id_from_seed::<sr25519::Public>("Dave"),

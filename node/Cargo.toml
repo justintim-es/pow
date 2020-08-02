@@ -157,3 +157,8 @@ features = ["small_rng"]
 
 [dependencies.sha3]
 version = "0.8"
+
+[dependencies.rpcs]
+package = 'rpcs'
+path = '../rpcs'
+version = '2.0.0'
