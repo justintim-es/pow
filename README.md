@@ -1,9 +1,14 @@
 [![Try on playground](https://img.shields.io/badge/Playground-node_template-brightgreen?logo=Parity%20Substrate)](https://playground-staging.substrate.dev/?deploy=node-template)
+# Hexsture
+smart contract blockchain
 
-# Substrate Node Template
+## hashing
+Guess the right hash and earn tokens
 
-A new FRAME-based Substrate node, ready for hacking :rocket:
+## voting
+Vote on hashes and all voters of the highest hash earn tokens
 
+# installation
 ## Local Development
 
 Follow these steps to prepare your local environment for Substrate development :hammer_and_wrench:
