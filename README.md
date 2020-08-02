@@ -9,19 +9,22 @@ Guess the right hash and earn tokens
 Vote on hashes and all voters of the highest hash earn tokens
 
 # installation ubuntu
+### step 1
 ```
 curl https://getsubstrate.io -sSf | bash -s -- --fast
 ```
-
-
+### step 2
+```
+git clone https://github.com/noahsalvadordenjo/pow.git
+```
 ## Build
-
+### step 3
 ```
 cargo build --release
 ```
 
 ## Run
-
+### step 4
 ### Single Node Development Chain
 
 Purge any existing developer chain state:
